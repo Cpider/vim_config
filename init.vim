@@ -183,7 +183,7 @@ nmap gp :cp<CR>
 
 
 "Plug install
-call plug#begin('~/.vim/plugged')
+call plug#begin('~/.config/nvim/plugged')
 
 Plug 'vim-airline/vim-airline'
 Plug 'connorholyday/vim-snazzy'
@@ -241,6 +241,10 @@ Plug 'vim-scripts/indentpython.vim'
 
 " Verilog
 Plug 'vhda/verilog_systemverilog.vim'
+Plug 'lfiolhais/vim-chisel'
+
+" Translator
+Plug 'voldikss/vim-translator'
 
 " Markdown
 Plug 'iamcco/markdown-preview.nvim', { 'do': { -> mkdp#util#install_sync() }, 'for' :['markdown', 'vim-plug'] }
@@ -266,6 +270,9 @@ Plug 'fadein/vim-FIGlet'
 " Coc
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
+" Colorschemes
+Plug 'morhetz/gruvbox'
+
 call plug#end()
 
 "Snazzy config
@@ -287,6 +294,9 @@ let NERDTreeMapOpenInTab = "o"
 let NERDTreeMapPreview = ""
 let NERDTreeMapCloseDir = "n"
 let NERDTreeMapChangeRoot = "y"
+
+"Colorschemes
+autocmd vimenter * ++nested colorscheme gruvbox
 
 "FZF
 autocmd! FileType fzf
@@ -316,7 +326,7 @@ command! -bang -nargs=* LinesWithPreview
     \   1)
 
 noremap <C-f> :FZF<CR>
-execute "set <M-h>=\eh"
+"execute "set <M-h>=\eh"
 noremap <C-a> :Ag<CR>
 noremap <M-h> :MRU<CR>
 noremap <C-t> :BTags<CR>
@@ -381,6 +391,14 @@ let g:gitgutter_highlight_lines = 1
 let g:gitgutter_max_signs = 500
 let g:gitgutter_max_signs = -1
 
+" ==
+" == Translator
+" ==
+nmap <silent> <leader>t <Plug>TranslateW
+vmap <silent> <leader>t <Plug> TranslateWV
+nmap <silent> <Leader>x <PLug> TranslateX
+nmap <silent> <leader>r <Plug>TranslateR
+vmap <silent> <leader>r <Plug> TranslateRV
 
 " ===
 " === MarkdownPreview
@@ -440,24 +458,34 @@ let g:coc_global_extensions = [
       \ 'coc-gitignore',	
       \ 'coc-omnisharp',
       \ 'coc-tasks',
+      \ 'coc-metals',
       \ 'coc-explorer',
       \ 'coc-import-cost',
       \ 'coc-vetur']
 
 set updatetime=100
 
-inoremap <silent><expr> <TAB>
-      \ coc#pum#visible() ? coc#pum#next(1) :
-      \ CheckBackspace() ? "\<Tab>" :
-      \ coc#refresh()
-inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
-inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
-                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
-
+" use <tab> for trigger completion and navigate to the next complete item
 function! CheckBackspace() abort
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
+
+inoremap <silent><expr> <Tab>
+      \ coc#pum#visible() ? coc#pum#next(1) :
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+
+inoremap <silent><expr> <cr> coc#pum#visible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
+inoremap <silent><expr> <cr> coc#pum#visible() && coc#pum#info()['index'] != -1 ? coc#pum#confirm() : "\<C-g>u\<CR>"
+
+"inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+"inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
+                              "\: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+inoremap <expr> <Tab> coc#pum#visible() ? coc#pum#next(1) : "\<Tab>"
+inoremap <expr> <S-Tab> coc#pum#visible() ? coc#pum#prev(1) : "\<S-Tab>"
+"inoremap <expr> <cr> complete_info()["selected"] != "-1" ? "\<C-y>" : "\<C-g>u\<CR>"
 
 inoremap <silent><expr> <c-h> coc#refresh()
 nmap <silent> [g <Plug>(coc-diagnostic-prev)
@@ -470,7 +498,7 @@ nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <leader>rn <Plug>(coc-rename)
 
-nnoremap <silent> M :call ShowDocumentation()<CR>
+nnoremap <silent> M :call Show_documentation()<CR>
 
 "function! ShowDocumentation()
   "if CocAction('hasProvider', 'hover')
@@ -487,6 +515,7 @@ function! Show_documentation()
 		call CocAction('doHover')
 	endif
 endfunction
+hi CocMenuSel ctermbg=237 guibg=#d3869b
 
 function! s:cocActionsOpenFromSelected(type) abort
   execute 'CocCommand actions.open ' . a:type
@@ -504,7 +533,6 @@ let g:coc_snippet_prev = '<c-l>'
 imap <C-j> <Plug>(coc-snippets-expand-jump)
 let g:snips_author = 'Jason lee'
 
-hi CocMenuSel ctermbg=237 guibg=#d3869b
 
 " ===
 " === Python-syntax
@@ -566,21 +594,6 @@ let Tlist_Ctags_Cmd = "~/software/ctags/build/bin/ctags"
 let Tlist_Auto_Open = 0
 nmap <F7> :TlistToggle<CR>
 
-
- "==================== Ultisnips ====================
- "let g:tex_flavor = "latex"
- "inoremap <c-n> <nop>
- "let g:UltiSnipsExpandTrigger="<c-e>"
- "let g:UltiSnipsJumpForwardTrigger="<c-e>"
- "let g:UltiSnipsJumpBackwardTrigger="<c-n>"
- "let g:UltiSnipsSnippetDirectories = [$HOME.'/.config/nvim/Ultisnips/', $HOME.'/.config/nvim/plugged/vim-snippets/UltiSnips/']
- "silent! au BufEnter,BufRead,BufNewFile * silent! unmap <c-r>
- " Solve extreme insert-mode lag on macOS (by disabling autotrigger)
- "augroup ultisnips_no_auto_expansion
-     "au!
-     "au VimEnter * au! UltiSnips_AutoTrigger
- "augroup END
-
 "Source Explorer
 nmap <F4> :SrcExplToggle<CR>
 let g:Srcexpl_winHeight = 8
@@ -588,6 +601,7 @@ let g:SrcExpl_refreshTime = 100
 let g:SrcExpl_jumpKey ="<ENTER>"
 let g:SrcExpl_gobackKey = "<SPACE>"
 let g:SrcExpl_isUpdateTags = 0
+
 
 "function! LoadCscope()
   "let db = findfile("cscope.out", ".;")
@@ -604,6 +618,7 @@ let g:SrcExpl_isUpdateTags = 0
   "endif
 "endfunction
 "au BufEnter /* call LoadCscope()
+"
 let g:terminal_color_0  = '#000000'
 let g:terminal_color_1  = '#FF5555'
 let g:terminal_color_2  = '#50FA7B'

@@ -1,2 +1,2 @@
 # vim_config
-My vim configuration.
+My vim or neovim configuration.
