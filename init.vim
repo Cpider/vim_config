@@ -157,6 +157,21 @@ endfunction
 "Press space twice to jump to the next '<++>' and edit it
 map <LEADER><LEADER> <Esc>/<++><CR>:nohlsearch<CR>c4l
 
+"Ssh remote clipboard
+if executable('clipboard-provider')
+    let g:clipboard = {
+          \ 'name': 'myClipboard',
+          \     'copy': {
+          \         '+': 'clipboard-provider copy',
+          \         '*': 'env COPY_PROVIDERS=tmux clipboard-provider copy',
+          \     },
+          \     'paste': {
+          \         '+': 'clipboard-provider paste',
+          \         '*': 'env COPY_PROVIDERS=tmux clipboard-provider paste',
+          \     },
+          \ }
+endif
+
 "Cscope
 if has("cscope")
   set csprg=/usr/bin/cscope
@@ -181,6 +196,63 @@ nmap gcc :cs find d <C-R>=expand("<cword>")<CR><CR>
 nmap gn :cn<CR>
 nmap gp :cp<CR>
 
+"Run code
+noremap r :call CompileRunGcc()<CR>
+func! CompileRunGcc()
+	exec "w"
+	if &filetype == 'c'
+		set splitbelow
+		:sp
+		:res -5
+		term gcc % -o %< && time ./%<
+	elseif &filetype == 'cpp'
+		set splitbelow
+		exec "!g++ -std=c++11 % -Wall -o %<"
+		:sp
+		:res -15
+		:term ./%<
+	elseif &filetype == 'cs'
+		set splitbelow
+		silent! exec "!mcs %"
+		:sp
+		:res -5
+		:term mono %<.exe
+	elseif &filetype == 'java'
+		set splitbelow
+		:sp
+		:res -5
+		term javac % && time java %<
+	elseif &filetype == 'sh'
+		:!time bash %
+	elseif &filetype == 'python'
+		set splitbelow
+		:sp
+		:term python3 %
+	elseif &filetype == 'html'
+		silent! exec "!".g:mkdp_browser." % &"
+	elseif &filetype == 'markdown'
+		exec "InstantMarkdownPreview"
+	elseif &filetype == 'tex'
+		silent! exec "VimtexStop"
+		silent! exec "VimtexCompile"
+	elseif &filetype == 'dart'
+		exec "CocCommand flutter.run -d ".g:flutter_default_device." ".g:flutter_run_args
+		silent! exec "CocCommand flutter.dev.openDevLog"
+	elseif &filetype == 'javascript'
+		set splitbelow
+		:sp
+		:term export DEBUG="INFO,ERROR,WARNING"; node --trace-warnings .
+	elseif &filetype == 'racket'
+		set splitbelow
+		:sp
+		:res -5
+		term racket %
+	elseif &filetype == 'go'
+		set splitbelow
+		:sp
+		:term go run .
+	endif
+endfunc
 
 "Plug install
 call plug#begin('~/.config/nvim/plugged')
@@ -205,9 +277,6 @@ Plug 'w0rp/ale'
 
 " Auto Complete
 "Plug 'Valloric/YouCompleteMe'
-
-" Firrtl syntax
-Plug 'azidar/firrtl-syntax'
 
 " Undo Tree
 Plug 'mbbill/undotree/'
@@ -239,9 +308,11 @@ Plug 'mattn/emmet-vim'
 " Python
 Plug 'vim-scripts/indentpython.vim'
 
+" Kite for python
+"Plug 'kiteco/vim-plugin'
+
 " Verilog
 Plug 'vhda/verilog_systemverilog.vim'
-Plug 'lfiolhais/vim-chisel'
 
 " Translator
 Plug 'voldikss/vim-translator'
@@ -261,6 +332,7 @@ Plug 'tpope/vim-surround' " type ysks' to wrap the word with '' or type cs'` to 
 Plug 'godlygeek/tabular' " type ;Tabularize /= to align the =
 Plug 'gcmt/wildfire.vim' " in Visual mode, type i' to select all text in '', or type i) i] i} ip
 Plug 'scrooloose/nerdcommenter' " in <space>cc to comment a line
+Plug 'tpope/vim-repeat'
 
 " Dependencies
 Plug 'MarcWeber/vim-addon-mw-utils'
@@ -335,8 +407,8 @@ noremap <C-b> :Buffers<CR>
 noremap q; :History:<CR>
 
 "undotree
-let g:undotree_DiffAutoOpen = 0
-map T :UndotreeToggle<CR>
+noremap T :UndotreeToggle<CR>
+let g:undotree_DiffAutoOpen = 1
 let g:undotree_SetFocusWhenToggle = 1
 let g:undotree_ShortIndicators = 1
 let g:undotree_WindowLayout = 2
@@ -400,6 +472,21 @@ nmap <silent> <Leader>x <PLug> TranslateX
 nmap <silent> <leader>r <Plug>TranslateR
 vmap <silent> <leader>r <Plug> TranslateRV
 
+" ==
+" == Kite
+" ==
+"let g:kite_supported_languages = ['python', 'javascript', 'go']
+"let g:kite_auto_complete=0
+"let g:kite_tab_complete=1
+"let g:kite_snippets=0
+"set completeopt+=menuone
+"set completeopt+=noselect
+"set completeopt+=preview
+"autocmd CompleteDone * if !pumvisible() | pclose | endif
+"set belloff+=ctrlg
+"nmap <silent> <buffer> gK <Plugin>(kite-docs)
+"let g:kite_documentation_continual=1
+
 " ===
 " === MarkdownPreview
 " ===
@@ -458,7 +545,6 @@ let g:coc_global_extensions = [
       \ 'coc-gitignore',	
       \ 'coc-omnisharp',
       \ 'coc-tasks',
-      \ 'coc-metals',
       \ 'coc-explorer',
       \ 'coc-import-cost',
       \ 'coc-vetur']
@@ -498,6 +584,7 @@ nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <leader>rn <Plug>(coc-rename)
 
+"nnoremap <silent> M :call ShowDocumentation()<CR>
 nnoremap <silent> M :call Show_documentation()<CR>
 
 "function! ShowDocumentation()
@@ -590,7 +677,7 @@ let Tlist_Show_One_File = 1
 let Tlist_Exit_OnlyWindow =1
 let Tlist_Use_Right_Window =1
 "let Tlist_Ctags_Cmd = "/usr/bin/ctags"
-let Tlist_Ctags_Cmd = "~/software/ctags/build/bin/ctags"
+let Tlist_Ctags_Cmd = "~/ctags/build/bin/ctags"
 let Tlist_Auto_Open = 0
 nmap <F7> :TlistToggle<CR>
 
