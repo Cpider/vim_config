@@ -302,7 +302,10 @@ Custom FZF options for better preview and navigation:
 #### Ranger
 - Ranger
 - Python 3
-- Ueberzug (for image preview)
+- Ueberzug (for image preview) - **Note**: Requires system dependencies:
+  - `libxres-dev` (Debian/Ubuntu) or `libxres` (Arch) or `libXres-devel` (Fedora)
+  - `pkg-config`
+  - Other X11 development libraries (see Troubleshooting section for full list)
 - Various file viewers (see rifle.conf)
 
 #### Oh-My-Zsh
